@@ -2,17 +2,16 @@
 	import type { Load } from '@sveltejs/kit';
 	export const prerender = true;
 	export const load: Load = async ({ params, url, stuff, session }) => {
-		const page = 1;
-		console.log(url.search);
-		console.log(params);
-		console.log(stuff);
-		console.log(session);
+		const queries = new URLSearchParams(url.search);
+		const page =
+			queries.has('page') && !isNaN(Number(queries.get('page'))) ? Number(queries.get('page')) : 1;
 
 		const res = await getPosts('', page);
 		return {
 			props: {
 				posts: res.posts,
-				page
+				page,
+				maxPage: res.totalPage
 			}
 		};
 	};
@@ -28,12 +27,19 @@
 	import type { Post } from '$lib/domain/post';
 	import PostCard from '$lib/components/blocks/PostCard.svelte';
 	import Heading from '$lib/components/atoms/Heading.svelte';
+	import PagingNav from '$lib/components/blocks/PagingNav.svelte';
+	import { goto } from '$app/navigation';
 
 	export let posts: Post[] = [];
-	let page: number = 1;
+	export let page: number = 1;
+	export let maxPage = 1;
 
 	const onFavoriteChanged = (i: number, post: Post) => {
 		console.log('Favorited');
+	};
+
+	const onPageChanged = (page: number) => {
+		goto(`/posts?page=${page + 1}`);
 	};
 </script>
 
@@ -51,6 +57,7 @@
 		<div>データはありません</div>
 	{/each}
 </section>
+<PagingNav currentPage={page - 1} {maxPage} displayNum={2} {onPageChanged} />
 
 <style>
 	.card-container {
