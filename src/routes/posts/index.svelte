@@ -20,21 +20,25 @@
 <script lang="ts">
 	import { getStores } from '$app/stores';
 	import { get } from 'svelte/store';
-
-	const token = get(getStores().session).accessToken;
-	console.log(token);
 	import { getPosts } from '$lib/apis/postApi';
 	import type { Post } from '$lib/domain/post';
 	import PostCard from '$lib/components/blocks/PostCard.svelte';
 	import Heading from '$lib/components/atoms/Heading.svelte';
 	import PagingNav from '$lib/components/blocks/PagingNav.svelte';
 	import { goto } from '$app/navigation';
+	import type { AppStoreType } from '$lib/stores/AppStore';
 
 	export let posts: Post[] = [];
 	export let page: number = 1;
 	export let maxPage = 1;
 
+	const appStore = get<AppStoreType>(getStores().session);
+
 	const onFavoriteChanged = (i: number, post: Post) => {
+		if (appStore.accessToken === '') {
+			goto(`/auth/login?redirectUrl=${location.pathname}`);
+			return;
+		}
 		console.log('Favorited');
 	};
 

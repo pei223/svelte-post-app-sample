@@ -1,68 +1,110 @@
 <script context="module" lang="ts">
+	import type { Load } from '@sveltejs/kit';
+
 	export const prerender = true;
+	export const load: Load = async ({ url }) => {
+		const queries = new URLSearchParams(url.search);
+		const page =
+			queries.has('page') && !isNaN(Number(queries.get('page'))) ? Number(queries.get('page')) : 1;
+
+		return {
+			props: {
+				page
+			}
+		};
+	};
 </script>
 
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { session } from '$app/stores';
+	import { getStores } from '$app/stores';
 	import { getMyPosts } from '$lib/apis/postApi';
-	import type { Post } from '$lib/domain/post';
+	import type { MyPost } from '$lib/domain/post';
 	import type { AppStoreType } from '$lib/stores/AppStore';
 	import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
+	import Heading from '$lib/components/atoms/Heading.svelte';
+	import PagingNav from '$lib/components/blocks/PagingNav.svelte';
+	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
+	import type { ErrorResponse } from '$lib/apis/ErrorResponse';
+	import axios from 'axios';
+	import Loading from '$lib/components/atoms/LoadingScreen.svelte';
+	import MyPostCard from '$lib/components/blocks/MyPostCard.svelte';
 
-	let posts: Post[] = [];
+	let posts: MyPost[] = [];
+	export let page = 1;
+	let maxPage = 1;
+	let loading = false;
 
-	const token = get<AppStoreType>(session).accessToken;
+	const appStore = get<AppStoreType>(getStores().session);
 
+	$: {
+		fetchPost(page);
+	}
 	onMount(async () => {
-		const res = await getMyPosts(token, 1);
-		console.log(res);
+		fetchPost(page);
 	});
-	const goPage = async () => {
-		goto('/posts');
+
+	const fetchPost = async (page: number) => {
+		loading = true;
+		if (appStore.accessToken === '') {
+			goto(`/auth/login?redirectUrl=${location.pathname}`);
+			return;
+		}
+		try {
+			const res = await getMyPosts(appStore.accessToken, page);
+			posts = res.posts;
+			maxPage = res.totalPage;
+		} catch (e) {
+			console.log(e);
+			if (!axios.isAxiosError(e)) {
+				goto(genErrorPath(window.location.pathname, ERROR_CODE.notAxiosError));
+				return;
+			}
+			if (!e.response) {
+				goto(genErrorPath(window.location.pathname, ERROR_CODE.networkError));
+				return;
+			}
+			const errorResponse = e.response.data as ErrorResponse;
+			switch (e.response.status) {
+				case 401:
+					goto(`/auth/login?redirectUrl=${window.location.pathname}`);
+					return;
+				default:
+					goto(genErrorPath(window.location.pathname, ERROR_CODE.unexpectedApiError));
+			}
+		} finally {
+			loading = false;
+		}
+	};
+
+	const onPageChanged = (page: number) => {
+		goto(`/posts/me?page=${page + 1}`);
 	};
 </script>
 
 <svelte:head>
-	<title>Home</title>
+	<title>自分の記事</title>
 </svelte:head>
 
 <section>
-	<h1>
-		<button on:click={goPage}>click {token}</button>
-	</h1>
-
-	<h2>
-		try editing <strong>src/routes/index.svelte</strong>
-	</h2>
+	<Heading title="自分の記事" />
+	{#if !loading}
+		{#each posts as post, i}
+			<div class="card-container">
+				<MyPostCard {post} {i} onDeleteClicked={(_, __) => {}} />
+			</div>
+		{:else}
+			<div>データはありません</div>
+		{/each}
+		<PagingNav currentPage={page - 1} {maxPage} displayNum={2} {onPageChanged} />
+	{/if}
 </section>
 
+<Loading open={loading} />
+
 <style>
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 1;
-	}
-
-	h1 {
-		width: 100%;
-	}
-
-	.welcome {
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
-
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
+	.card-container {
+		margin-bottom: 20px;
 	}
 </style>
