@@ -1,0 +1,33 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "prettier.configPath": ".prettierrc",
+    "editor.tabSize": 2,
+    "editor.fontSize": 14,
+    "editor.wordWrap": "on"
+  },
+  "extensions": {
+    "recommendations": [
+      // Svelte特化
+      "svelte.svelte-vscode",
+      // コード補完
+      "esbenp.prettier-vscode",
+      "xabikos.javascriptsnippets",
+      "dbaeumer.vscode-eslint",
+      "CoenraadS.bracket-pair-colorizer",
+      // コード整形
+      "formulahendry.auto-rename-tag",
+      "formulahendry.auto-close-tag",
+      // デバッグ
+      "msjsdiag.debugger-for-chrome",
+      // 基本
+      "eamodio.gitlens"
+    ]
+  }
+}
