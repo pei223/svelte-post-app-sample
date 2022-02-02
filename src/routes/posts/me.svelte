@@ -20,7 +20,7 @@
 	import { getStores } from '$app/stores';
 	import { getMyPosts } from '$lib/apis/postApi';
 	import type { MyPost } from '$lib/domain/post';
-	import type { AppStoreType } from '$lib/stores/AppStore';
+	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
 	import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
 	import Heading from '$lib/components/atoms/Heading.svelte';
@@ -32,6 +32,7 @@
 	import MyPostCard from '$lib/components/blocks/MyPostCard.svelte';
 	import { browser } from '$app/env';
 	import AddFab from '$lib/components/atoms/AddFab.svelte';
+	import CookieService from '$lib/services/CookieService';
 
 	let posts: MyPost[] = [];
 	export let page = 1;
@@ -72,6 +73,7 @@
 			const errorResponse = e.response.data as ErrorResponse;
 			switch (e.response.status) {
 				case 401:
+					new AppStoreWrapper(appStore, new CookieService()).clear();
 					goto(`/auth/login?redirectUrl=${location.pathname}`);
 					return;
 				default:

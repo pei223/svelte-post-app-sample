@@ -4,8 +4,7 @@
 	export const load: Load = ({ url, params }) => {
 		if (!params.id || isNaN(Number(params.id))) {
 			return {
-				redirect: `/auth/login?redirectUrl=${url.pathname}`,
-				status: 300
+				status: 404
 			};
 		}
 		return {
@@ -23,13 +22,14 @@
 	import { findPost } from '$lib/apis/postApi';
 
 	import PostForm from '$lib/components/templates/PostForm.svelte';
-	import type { AppStoreType } from '$lib/stores/AppStore';
+	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import type { MyPost } from '$lib/domain/post';
 	import axios from 'axios';
 	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
 	import LoadingScreen from '$lib/components/atoms/LoadingScreen.svelte';
+	import CookieService from '$lib/services/CookieService';
 
 	export let id = 0;
 	let post: MyPost;
@@ -55,6 +55,7 @@
 			}
 			switch (e.response.status) {
 				case 401:
+					new AppStoreWrapper(appStore, new CookieService()).clear();
 					goto(`/auth/login?redirectUrl=${location.pathname}`);
 					return;
 				case 404:

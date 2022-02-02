@@ -4,8 +4,7 @@
 	export const load: Load = ({ url, params }) => {
 		if (!params.id || isNaN(Number(params.id))) {
 			return {
-				redirect: `/auth/login?redirectUrl=${url.pathname}`,
-				status: 300
+				status: 404
 			};
 		}
 		return {

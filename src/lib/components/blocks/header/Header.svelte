@@ -5,23 +5,42 @@
 	import List, { Item, Text, Graphic } from '@smui/list';
 	import { goto } from '$app/navigation';
 	let open = false;
-	const menus = [
-		{
-			url: '/posts/',
-			icon: 'star',
-			text: '記事一覧'
-		},
-		{
-			url: '/posts/me',
-			icon: 'star',
-			text: '自分の記事一覧'
-		},
-		{
-			url: '/posts/add',
-			icon: 'edit',
-			text: '記事を登録する'
-		}
-	];
+	export let logined = false;
+	$: menus = logined
+		? [
+				{
+					url: '/posts/',
+					icon: 'star',
+					text: '記事一覧'
+				},
+				{
+					url: '/posts/me',
+					icon: 'star',
+					text: '自分の記事一覧'
+				},
+				{
+					url: '/posts/add',
+					icon: 'edit',
+					text: '記事を登録する'
+				}
+		  ]
+		: [
+				{
+					url: '/posts/',
+					icon: 'star',
+					text: '記事一覧'
+				},
+				{
+					url: '/auth/login',
+					icon: 'star',
+					text: 'ログイン'
+				},
+				{
+					url: '/auth/signup',
+					icon: 'star',
+					text: '登録'
+				}
+		  ];
 
 	const goPage = (url: string) => {
 		open = false;

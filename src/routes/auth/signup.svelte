@@ -4,7 +4,7 @@
 	import HelperText from '@smui/textfield/helper-text';
 	import Heading from '$lib/components/atoms/Heading.svelte';
 	import { loginRequest, signupRequest } from '$lib/apis/authApi';
-	import { get } from 'svelte/store';
+	import type { Writable } from 'svelte/store';
 	import { session } from '$app/stores';
 	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
 	import { goto } from '$app/navigation';
@@ -21,7 +21,7 @@
 	let passwordErrorMessage = '';
 	let emailErrorMessage = '';
 
-	const appStore = get<AppStoreType>(session);
+	const appStore: Writable<AppStoreType> = session;
 	const fieldStyle = 'width: 60%';
 
 	const signup = async () => {
@@ -44,8 +44,7 @@
 				email
 			});
 			const appStoreWrapper = new AppStoreWrapper(appStore, new CookieService());
-			appStoreWrapper.setToken(res.token);
-			appStoreWrapper.setUser({
+			appStoreWrapper.set(res.token, {
 				name: res.name,
 				id: res.id,
 				email: res.email

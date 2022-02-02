@@ -1,9 +1,18 @@
 <script lang="ts">
+	import { session } from '$app/stores';
 	import Header from '$lib/components/blocks/header/Header.svelte';
+	import type { AppStoreType } from '$lib/stores/AppStore';
+	import type { Writable } from 'svelte/store';
 	import '../app.css';
+
+	const appStore: Writable<AppStoreType> = session;
+	let logined = false;
+	appStore.subscribe((value) => {
+		logined = value.accessToken !== '';
+	});
 </script>
 
-<Header />
+<Header {logined} />
 
 <main class="container">
 	<div class="content">
