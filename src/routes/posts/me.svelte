@@ -30,16 +30,19 @@
 	import axios from 'axios';
 	import Loading from '$lib/components/atoms/LoadingScreen.svelte';
 	import MyPostCard from '$lib/components/blocks/MyPostCard.svelte';
+	import { browser } from '$app/env';
 
 	let posts: MyPost[] = [];
 	export let page = 1;
 	let maxPage = 1;
-	let loading = false;
+	let loading = true;
 
 	const appStore = get<AppStoreType>(getStores().session);
 
 	$: {
-		fetchPost(page);
+		if (browser) {
+			fetchPost(page);
+		}
 	}
 	onMount(async () => {
 		fetchPost(page);
@@ -58,20 +61,20 @@
 		} catch (e) {
 			console.log(e);
 			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(window.location.pathname, ERROR_CODE.notAxiosError));
+				goto(genErrorPath(location.pathname, ERROR_CODE.notAxiosError));
 				return;
 			}
 			if (!e.response) {
-				goto(genErrorPath(window.location.pathname, ERROR_CODE.networkError));
+				goto(genErrorPath(location.pathname, ERROR_CODE.networkError));
 				return;
 			}
 			const errorResponse = e.response.data as ErrorResponse;
 			switch (e.response.status) {
 				case 401:
-					goto(`/auth/login?redirectUrl=${window.location.pathname}`);
+					goto(`/auth/login?redirectUrl=${location.pathname}`);
 					return;
 				default:
-					goto(genErrorPath(window.location.pathname, ERROR_CODE.unexpectedApiError));
+					goto(genErrorPath(location.pathname, ERROR_CODE.unexpectedApiError));
 			}
 		} finally {
 			loading = false;
