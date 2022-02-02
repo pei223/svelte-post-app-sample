@@ -120,7 +120,7 @@
 		bind:value={title}
 		label="タイトル"
 	>
-		<HelperText persistent slot="helper">{titleErrorMessage}</HelperText>
+		<HelperText persistent slot="helper" style="color: red">{titleErrorMessage}</HelperText>
 	</Textfield>
 </section>
 <section class="content-area">
@@ -143,7 +143,7 @@
 			on:focus={() => (contentErrorMessage = '')}
 		>
 			<CharacterCounter slot="internalCounter">0</CharacterCounter>
-			<HelperText persistent slot="helper">{contentErrorMessage}</HelperText>
+			<HelperText persistent slot="helper" style="color: red">{contentErrorMessage}</HelperText>
 		</Textfield>
 	</div>
 	<div class="content-view" style={`height: ${textAreaHeight}px`}>

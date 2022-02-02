@@ -83,7 +83,7 @@
 			style={fieldStyle}
 			invalid={emailErrorMessage !== ''}
 		>
-			<HelperText persistent slot="helper">{emailErrorMessage}</HelperText>
+			<HelperText persistent slot="helper" style="color: red">{emailErrorMessage}</HelperText>
 		</Textfield>
 	</div>
 	<div class="field-area">
@@ -94,7 +94,7 @@
 			label="名前"
 			style={fieldStyle}
 		>
-			<HelperText persistent slot="helper">{nameErrorMessage}</HelperText>
+			<HelperText persistent slot="helper" style="color: red">{nameErrorMessage}</HelperText>
 		</Textfield>
 	</div>
 
@@ -107,7 +107,7 @@
 			bind:value={password}
 			style={fieldStyle}
 		>
-			<HelperText persistent slot="helper">{passwordErrorMessage}</HelperText>
+			<HelperText persistent slot="helper" style="color: red">{passwordErrorMessage}</HelperText>
 		</Textfield>
 	</div>
 </div>
