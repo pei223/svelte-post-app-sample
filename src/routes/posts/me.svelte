@@ -97,10 +97,10 @@
 			<div class="card-container">
 				<MyPostCard {post} {i} onDeleteClicked={(_, __) => {}} />
 			</div>
+			<PagingNav currentPage={page - 1} {maxPage} displayNum={2} {onPageChanged} />
 		{:else}
 			<div>データはありません</div>
 		{/each}
-		<PagingNav currentPage={page - 1} {maxPage} displayNum={2} {onPageChanged} />
 	{/if}
 </section>
 
