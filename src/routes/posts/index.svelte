@@ -6,7 +6,7 @@
 		const page =
 			queries.has('page') && !isNaN(Number(queries.get('page'))) ? Number(queries.get('page')) : 1;
 
-		const res = await getPosts('', page);
+		const res = await getPosts(session.accessToken, page);
 		return {
 			props: {
 				posts: res.posts,
