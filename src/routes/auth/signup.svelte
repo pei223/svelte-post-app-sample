@@ -77,31 +77,38 @@
 <Heading title="登録" />
 <div class="fields-area">
 	<div class="field-area">
-		<Textfield bind:value={email} label="e-mail" style={fieldStyle} updateInvalid>
-			<HelperText validationMsg={emailErrorMessage !== ''} slot="helper"
-				>{emailErrorMessage}</HelperText
-			>
+		<Textfield
+			on:focus={() => (emailErrorMessage = '')}
+			bind:value={email}
+			label="e-mail"
+			style={fieldStyle}
+			invalid={emailErrorMessage !== ''}
+		>
+			<HelperText persistent slot="helper">{emailErrorMessage}</HelperText>
 		</Textfield>
 	</div>
 	<div class="field-area">
-		<Textfield bind:value={name} label="名前" style={fieldStyle} updateInvalid>
-			<HelperText validationMsg={nameErrorMessage !== ''} slot="helper"
-				>{nameErrorMessage}</HelperText
-			>
+		<Textfield
+			on:focus={() => (nameErrorMessage = '')}
+			invalid={nameErrorMessage !== ''}
+			bind:value={name}
+			label="名前"
+			style={fieldStyle}
+		>
+			<HelperText persistent slot="helper">{nameErrorMessage}</HelperText>
 		</Textfield>
 	</div>
 
 	<div class="field-area">
 		<Textfield
-			updateInvalid
+			on:focus={() => (passwordErrorMessage = '')}
 			label="パスワード"
 			type="password"
+			invalid={passwordErrorMessage !== ''}
 			bind:value={password}
 			style={fieldStyle}
 		>
-			<HelperText validationMsg={passwordErrorMessage != ''} slot="helper2"
-				>{passwordErrorMessage}</HelperText
-			>
+			<HelperText persistent slot="helper">{passwordErrorMessage}</HelperText>
 		</Textfield>
 	</div>
 </div>

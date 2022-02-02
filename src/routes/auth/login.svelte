@@ -20,7 +20,7 @@
 	let passwordErrorMessage = '';
 
 	const appStore = get<AppStoreType>(session);
-	const fieldStyle = 'width: 60%';
+	const fieldStyle = 'width: 60%;';
 
 	const login = async () => {
 		if (name === '') {
@@ -74,24 +74,27 @@
 <Heading title="ログイン" />
 <div class="fields-area">
 	<div class="field-area">
-		<Textfield bind:value={name} label="名前" style={fieldStyle} updateInvalid>
-			<HelperText validationMsg={nameErrorMessage !== ''} slot="helper"
-				>{nameErrorMessage}</HelperText
-			>
+		<Textfield
+			on:focus={() => (nameErrorMessage = '')}
+			invalid={nameErrorMessage !== ''}
+			bind:value={name}
+			label="名前"
+			style={fieldStyle}
+		>
+			<HelperText persistent slot="helper">{nameErrorMessage}</HelperText>
 		</Textfield>
 	</div>
 
 	<div class="field-area">
 		<Textfield
-			updateInvalid
+			on:focus={() => (passwordErrorMessage = '')}
 			label="パスワード"
 			type="password"
+			invalid={passwordErrorMessage !== ''}
 			bind:value={password}
 			style={fieldStyle}
 		>
-			<HelperText validationMsg={passwordErrorMessage != ''} slot="helper2"
-				>{passwordErrorMessage}</HelperText
-			>
+			<HelperText persistent slot="helper">{passwordErrorMessage}</HelperText>
 		</Textfield>
 	</div>
 </div>

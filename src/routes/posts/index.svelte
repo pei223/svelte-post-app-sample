@@ -57,10 +57,12 @@
 		<div class="card-container">
 			<PostCard {i} {post} {onFavoriteChanged} />
 		</div>
-		<PagingNav currentPage={page - 1} {maxPage} displayNum={2} {onPageChanged} />
 	{:else}
 		<div>データはありません</div>
 	{/each}
+	{#if posts.length > 0}
+		<PagingNav currentPage={page - 1} {maxPage} displayNum={2} {onPageChanged} />
+	{/if}
 </section>
 
 <style>
