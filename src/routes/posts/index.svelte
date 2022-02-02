@@ -27,6 +27,7 @@
 	import PagingNav from '$lib/components/blocks/PagingNav.svelte';
 	import { goto } from '$app/navigation';
 	import type { AppStoreType } from '$lib/stores/AppStore';
+	import AddFab from '$lib/components/atoms/AddFab.svelte';
 
 	export let posts: Post[] = [];
 	export let page: number = 1;
@@ -63,6 +64,7 @@
 	{#if posts.length > 0}
 		<PagingNav currentPage={page - 1} {maxPage} displayNum={2} {onPageChanged} />
 	{/if}
+	<AddFab on:click={() => goto('/posts/add')} />
 </section>
 
 <style>

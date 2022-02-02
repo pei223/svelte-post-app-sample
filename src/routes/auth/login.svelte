@@ -43,7 +43,9 @@
 				id: res.id,
 				email: res.email
 			});
-			goto('/posts/me');
+			const queries = new URLSearchParams(location.search);
+			const redirectUrl = queries.has('redirectUrl') ? queries.get('redirectUrl') : '/posts/me';
+			goto(redirectUrl);
 		} catch (e) {
 			console.log(e);
 			if (!axios.isAxiosError(e)) {

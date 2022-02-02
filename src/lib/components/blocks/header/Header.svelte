@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import logo from './svelte-logo.svg';
 	import IconButton from '@smui/icon-button';
 	import TopAppBar, { Title, Row, Section } from '@smui/top-app-bar';
-	import Drawer, { AppContent, Content, Header, Subtitle, Scrim } from '@smui/drawer';
-	import List, { Item, Text, Graphic, Separator, Subheader } from '@smui/list';
+	import Drawer, { Content, Scrim } from '@smui/drawer';
+	import List, { Item, Text, Graphic } from '@smui/list';
 	import { goto } from '$app/navigation';
 	let open = false;
 	const menus = [
@@ -17,6 +15,11 @@
 			url: '/posts/me',
 			icon: 'star',
 			text: '自分の記事一覧'
+		},
+		{
+			url: '/posts/add',
+			icon: 'edit',
+			text: '記事を登録する'
 		}
 	];
 

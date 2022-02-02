@@ -31,6 +31,7 @@
 	import Loading from '$lib/components/atoms/LoadingScreen.svelte';
 	import MyPostCard from '$lib/components/blocks/MyPostCard.svelte';
 	import { browser } from '$app/env';
+	import AddFab from '$lib/components/atoms/AddFab.svelte';
 
 	let posts: MyPost[] = [];
 	export let page = 1;
@@ -97,10 +98,13 @@
 			<div class="card-container">
 				<MyPostCard {post} {i} onDeleteClicked={(_, __) => {}} />
 			</div>
-			<PagingNav currentPage={page - 1} {maxPage} displayNum={2} {onPageChanged} />
 		{:else}
 			<div>データはありません</div>
 		{/each}
+		{#if posts}
+			<PagingNav currentPage={page - 1} {maxPage} displayNum={2} {onPageChanged} />
+		{/if}
+		<AddFab on:click={() => goto('/posts/add')} />
 	{/if}
 </section>
 
