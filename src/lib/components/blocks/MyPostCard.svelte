@@ -16,7 +16,12 @@
 <div class="card" use:Ripple={{ surface: true }}>
 	<div class="card-content" on:click={goDetailPage}>
 		<div>
-			<h3 class="post-title">{post.title}</h3>
+			<h3 class="post-title">
+				{#if post.expose}
+					<Icon class="material-icons">lock</Icon>
+				{/if}
+				{post.title}
+			</h3>
 			<p class="post-author">{post.author.name}</p>
 			<p class="post-created-at">{post.createdAt}</p>
 		</div>
@@ -43,6 +48,8 @@
 	}
 
 	.post-title {
+		display: flex;
+		align-items: center;
 		font-weight: 600;
 		font-size: 1.4rem;
 	}

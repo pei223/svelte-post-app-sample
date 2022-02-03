@@ -4,6 +4,9 @@
 	import Drawer, { Content, Scrim } from '@smui/drawer';
 	import List, { Item, Text, Graphic } from '@smui/list';
 	import { goto } from '$app/navigation';
+	import { session } from '$app/stores';
+	import { AppStoreWrapper } from '$lib/stores/AppStore';
+	import CookieService from '$lib/services/CookieService';
 	let open = false;
 	export let logined = false;
 	$: menus = logined
@@ -32,7 +35,7 @@
 				},
 				{
 					url: '/auth/login',
-					icon: 'star',
+					icon: 'login',
 					text: 'ログイン'
 				},
 				{
@@ -45,6 +48,11 @@
 	const goPage = (url: string) => {
 		open = false;
 		goto(url);
+	};
+	const logout = () => {
+		open = false;
+		new AppStoreWrapper(session, new CookieService()).clear();
+		goto('/auth/login');
 	};
 </script>
 
@@ -61,6 +69,14 @@
 					</Text>
 				</Item>
 			{/each}
+			{#if logined}
+				<div class="logout-row">
+					<Item on:click={logout}>
+						<Graphic class="material-icons" aria-hidden="true">logout</Graphic>
+						<Text>ログアウト</Text>
+					</Item>
+				</div>
+			{/if}
 		</List>
 	</Content>
 </Drawer>
@@ -74,3 +90,9 @@
 		</Section>
 	</Row>
 </TopAppBar>
+
+<style>
+	.logout-row {
+		margin-top: 40px;
+	}
+</style>
