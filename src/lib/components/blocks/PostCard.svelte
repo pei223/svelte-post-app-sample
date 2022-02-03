@@ -6,10 +6,17 @@
 
 	export let i: number;
 	export let post: Post;
-	export let onFavoriteChanged: (index: number, post: Post) => void;
+	export let onFavoriteChanged: (index: number, post: Post) => Promise<void>;
+	let favoriteLoading = false;
 
 	const goDetailPage = () => {
 		goto(`/posts/${post.id}`);
+	};
+	const onFavoriteChangeClicked = () => {
+		favoriteLoading = true;
+		onFavoriteChanged(i, post).finally(() => {
+			favoriteLoading = false;
+		});
 	};
 </script>
 
@@ -22,10 +29,12 @@
 		</div>
 		<div
 			style="display: flex; align-items: center;"
-			on:click|stopPropagation={() => onFavoriteChanged(i, post)}
+			on:click|stopPropagation={onFavoriteChangeClicked}
 		>
 			<IconButton class="material-icons">
-				{#if post.favorited}
+				{#if favoriteLoading}
+					more_horiz
+				{:else if post.favorited}
 					favorite
 				{:else}
 					favorite_border
@@ -61,9 +70,5 @@
 	.post-created-at {
 		color: #7c7c7c;
 		font-size: 0.8rem;
-	}
-	.grid {
-		display: flex;
-		align-content: center;
 	}
 </style>

@@ -17,7 +17,7 @@
 </script>
 
 <script lang="ts">
-	import { getStores } from '$app/stores';
+	import { getStores, session } from '$app/stores';
 	import { get } from 'svelte/store';
 	import { getPosts } from '$lib/apis/postApi';
 	import type { Post } from '$lib/domain/post';
@@ -25,8 +25,12 @@
 	import Heading from '$lib/components/atoms/Heading.svelte';
 	import PagingNav from '$lib/components/blocks/PagingNav.svelte';
 	import { goto } from '$app/navigation';
-	import type { AppStoreType } from '$lib/stores/AppStore';
+	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
 	import AddFab from '$lib/components/atoms/AddFab.svelte';
+	import { addFavorite, deleteFavoriteByPostId } from '$lib/apis/favoriteApi';
+	import axios from 'axios';
+	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
+	import CookieService from '$lib/services/CookieService';
 
 	export let posts: Post[] = [];
 	export let page: number = 1;
@@ -34,12 +38,40 @@
 
 	const appStore = get<AppStoreType>(getStores().session);
 
-	const onFavoriteChanged = (i: number, post: Post) => {
+	const onFavoriteChanged = async (i: number, post: Post) => {
 		if (appStore.accessToken === '') {
 			goto(`/auth/login?redirectUrl=${location.pathname}`);
 			return;
 		}
-		console.log('Favorited');
+		try {
+			post.favorited
+				? await deleteFavoriteByPostId(appStore.accessToken, post.id)
+				: await addFavorite(appStore.accessToken, post.id);
+			posts[i].favorited = !posts[i].favorited;
+			posts = posts;
+		} catch (e) {
+			if (!axios.isAxiosError(e)) {
+				goto(genErrorPath(location.pathname, ERROR_CODE.notAxiosError));
+				return;
+			}
+			if (!e.response) {
+				goto(genErrorPath(location.pathname, ERROR_CODE.networkError));
+				return;
+			}
+			switch (e.response.status) {
+				case 400:
+					// TODO すでに登録済みの旨のダイアログ表示
+					goto(genErrorPath(location.pathname, ERROR_CODE.paramError));
+					return;
+				case 401:
+					new AppStoreWrapper(session, new CookieService()).clear();
+					goto(`/auth/login?redirectUrl=${location.pathname}`);
+					return;
+				case 404:
+					goto(genErrorPath(location.pathname, ERROR_CODE.notFound));
+					return;
+			}
+		}
 	};
 
 	const onPageChanged = (page: number) => {
