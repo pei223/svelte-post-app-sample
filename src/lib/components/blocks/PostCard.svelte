@@ -9,7 +9,7 @@
 	export let onFavoriteChanged: (index: number, post: Post) => void;
 
 	const goDetailPage = () => {
-		goto(`/posts/${post.id}`);
+		goto(`/posts/${post.id}111`);
 	};
 </script>
 

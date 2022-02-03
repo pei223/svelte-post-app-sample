@@ -23,8 +23,6 @@
 	import { session } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import type { MyPost } from '$lib/domain/post';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
-	import axios from 'axios';
 	import LoadingScreen from '$lib/components/atoms/LoadingScreen.svelte';
 	import Heading from '$lib/components/atoms/Heading.svelte';
 	import { marked } from 'marked';
@@ -47,28 +45,9 @@
 	};
 
 	onMount(async () => {
-		try {
-			const res = await findPost(appStore.accessToken, id);
-			post = res;
-		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.notAxiosError));
-				return;
-			}
-			if (!e.response) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.networkError));
-				return;
-			}
-			switch (e.response.status) {
-				case 404:
-					goto('/404');
-					return;
-				default:
-					goto(genErrorPath(location.pathname, ERROR_CODE.unexpectedApiError));
-			}
-		} finally {
-			loading = false;
-		}
+		const res = await findPost(appStore.accessToken, id);
+		post = res;
+		loading = false;
 	});
 </script>
 

@@ -17,7 +17,7 @@
 	<div class="card-content" on:click={goDetailPage}>
 		<div>
 			<h3 class="post-title">
-				{#if post.expose}
+				{#if !post.expose}
 					<Icon class="material-icons">lock</Icon>
 				{/if}
 				{post.title}

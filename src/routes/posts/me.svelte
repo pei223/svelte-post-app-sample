@@ -1,7 +1,6 @@
 <script context="module" lang="ts">
 	import type { Load } from '@sveltejs/kit';
 
-	export const prerender = true;
 	export const load: Load = async ({ url }) => {
 		const queries = new URLSearchParams(url.search);
 		const page =
@@ -20,21 +19,17 @@
 	import { getStores } from '$app/stores';
 	import { deletePost, getMyPosts } from '$lib/apis/postApi';
 	import type { MyPost } from '$lib/domain/post';
-	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
 	import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
 	import Dialog, { Title, Content, Actions } from '@smui/dialog';
 	import Button, { Label } from '@smui/button';
 	import Heading from '$lib/components/atoms/Heading.svelte';
 	import PagingNav from '$lib/components/blocks/PagingNav.svelte';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
-	import type { ErrorResponse } from '$lib/apis/ErrorResponse';
-	import axios from 'axios';
 	import Loading from '$lib/components/atoms/LoadingScreen.svelte';
 	import MyPostCard from '$lib/components/blocks/MyPostCard.svelte';
 	import { browser } from '$app/env';
 	import AddFab from '$lib/components/atoms/AddFab.svelte';
-	import CookieService from '$lib/services/CookieService';
+	import type { AppStoreType } from '$lib/stores/AppStore';
 
 	let posts: MyPost[] = [];
 	export let page = 1;
@@ -61,32 +56,10 @@
 			goto(`/auth/login?redirectUrl=${location.pathname}`);
 			return;
 		}
-		try {
-			const res = await getMyPosts(appStore.accessToken, page);
-			posts = res.posts;
-			maxPage = res.totalPage;
-		} catch (e) {
-			console.log(e);
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.notAxiosError));
-				return;
-			}
-			if (!e.response) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.networkError));
-				return;
-			}
-			const errorResponse = e.response.data as ErrorResponse;
-			switch (e.response.status) {
-				case 401:
-					new AppStoreWrapper(appStore, new CookieService()).clear();
-					goto(`/auth/login?redirectUrl=${location.pathname}`);
-					return;
-				default:
-					goto(genErrorPath(location.pathname, ERROR_CODE.unexpectedApiError));
-			}
-		} finally {
-			loading = false;
-		}
+		const res = await getMyPosts(appStore.accessToken, page);
+		posts = res.posts;
+		maxPage = res.totalPage;
+		loading = false;
 	};
 
 	const onPageChanged = (page: number) => {
@@ -102,34 +75,14 @@
 		if (deleteTargetIndex < 0) {
 			return;
 		}
-		try {
-			loading = true;
-			await deletePost(appStore.accessToken, deleteTargetPost.id);
-			loading = false;
-			posts.splice(deleteTargetIndex, 1);
-			posts = posts;
-			deleteTargetIndex = -1;
-			deleteConfirmDialogOpen = false;
-		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(this.$route.path, ERROR_CODE.notAxiosError));
-				return;
-			}
-			if (!e.response) {
-				goto(genErrorPath(this.$route.path, ERROR_CODE.networkError));
-				return;
-			}
-			switch (e.response.status) {
-				case 401:
-					goto(`/auth/login?redirectUrl=${location.hostname}`);
-					return;
-				case 404:
-					goto('/404');
-					return;
-				default:
-					goto(genErrorPath(this.$route.path, ERROR_CODE.unexpectedApiError));
-			}
-		}
+		// TODO 失敗した場合は共通エラーハンドリングではなくダイアログを表示したい
+		loading = true;
+		await deletePost(appStore.accessToken, deleteTargetPost.id);
+		posts.splice(deleteTargetIndex, 1);
+		posts = posts;
+		deleteTargetIndex = -1;
+		deleteConfirmDialogOpen = false;
+		loading = false;
 	};
 </script>
 
