@@ -55,7 +55,7 @@
 			}
 			switch (e.response.status) {
 				case 401:
-					new AppStoreWrapper(appStore, new CookieService()).clear();
+					new AppStoreWrapper(session, new CookieService()).clear();
 					goto(`/auth/login?redirectUrl=${location.pathname}`);
 					return;
 				case 404:

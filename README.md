@@ -58,6 +58,13 @@ npm i
 npm run dev
 ```
 
+## 商用デプロイ
+
+```
+npm run build
+node build/index.js
+```
+
 # Svelte 関連
 
 ## Svelte とは

@@ -15,7 +15,7 @@
 
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getStores } from '$app/stores';
+	import { getStores, session } from '$app/stores';
 	import { deletePost, getMyPosts } from '$lib/apis/postApi';
 	import type { MyPost } from '$lib/domain/post';
 	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
@@ -76,7 +76,7 @@
 			const errorResponse = e.response.data as ErrorResponse;
 			switch (e.response.status) {
 				case 401:
-					new AppStoreWrapper(appStore, new CookieService()).clear();
+					new AppStoreWrapper(session, new CookieService()).clear();
 					goto(`/auth/login?redirectUrl=${location.pathname}`);
 					return;
 				default:
