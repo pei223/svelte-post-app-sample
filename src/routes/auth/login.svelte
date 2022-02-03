@@ -13,11 +13,13 @@
 	import type { ErrorResponse } from '$lib/apis/ErrorResponse';
 	import { base } from '$app/paths';
 	import CookieService from '$lib/services/CookieService';
+	import LoadingScreen from '$lib/components/atoms/LoadingScreen.svelte';
 
 	let name = '';
 	let password = '';
 	let nameErrorMessage = '';
 	let passwordErrorMessage = '';
+	let loading = false;
 
 	const appStore: Writable<AppStoreType> = session;
 	const fieldStyle = 'width: 60%;';
@@ -32,6 +34,7 @@
 			return;
 		}
 		try {
+			loading = true;
 			const res = await loginRequest({
 				name,
 				password
@@ -69,6 +72,8 @@
 				default:
 					goto(genErrorPath(base, ERROR_CODE.unexpectedApiError));
 			}
+		} finally {
+			loading = false;
 		}
 	};
 </script>
@@ -104,6 +109,7 @@
 <Button color="secondary" on:click={login} variant="raised">
 	<Label>ログイン</Label>
 </Button>
+<LoadingScreen open={loading} />
 
 <style>
 	.field-area {
