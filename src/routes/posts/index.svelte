@@ -27,7 +27,7 @@
 	import { goto } from '$app/navigation';
 	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
 	import AddFab from '$lib/components/atoms/AddFab.svelte';
-	import { addFavorite, deleteFavoriteByPostId } from '$lib/apis/favoriteApi';
+	import { addFavorite, deleteFavorite } from '$lib/apis/favoriteApi';
 	import axios from 'axios';
 	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
 	import CookieService from '$lib/services/CookieService';
@@ -45,7 +45,7 @@
 		}
 		try {
 			post.favorited
-				? await deleteFavoriteByPostId(appStore.accessToken, post.id)
+				? await deleteFavorite(appStore.accessToken, post.id)
 				: await addFavorite(appStore.accessToken, post.id);
 			posts[i].favorited = !posts[i].favorited;
 			posts = posts;

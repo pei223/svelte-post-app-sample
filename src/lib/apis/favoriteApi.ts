@@ -1,8 +1,6 @@
 import { baseApi } from './baseApi';
 import type { FavoriteList } from '../domain/Favorite';
 
-const NO_SELECTED_ID = -1;
-
 export const addFavorite = async (accessToken: string, postId: number): Promise<void> => {
 	await baseApi.post(
 		`/favorites/add/${postId}`,
@@ -15,34 +13,10 @@ export const addFavorite = async (accessToken: string, postId: number): Promise<
 	);
 };
 
-export const deleteFavoriteByPostId = async (
-	accessToken: string,
-	postId: number
-): Promise<void> => {
+export const deleteFavorite = async (accessToken: string, postId: number): Promise<void> => {
 	await baseApi.post(
-		`/favorites/delete`,
-		{
-			postId,
-			favoriteId: NO_SELECTED_ID
-		},
-		{
-			headers: {
-				Authorization: `Bearer ${accessToken}`
-			}
-		}
-	);
-};
-
-export const deleteFavoriteByFavoriteId = async (
-	accessToken: string,
-	favoriteId: number
-): Promise<void> => {
-	await baseApi.post(
-		`/favorites/delete`,
-		{
-			postId: NO_SELECTED_ID,
-			favoriteId
-		},
+		`/favorites/delete/${postId}`,
+		{},
 		{
 			headers: {
 				Authorization: `Bearer ${accessToken}`
