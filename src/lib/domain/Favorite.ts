@@ -6,6 +6,6 @@ export type Favorite = {
 };
 
 export type FavoriteList = {
-	favorites: Favorite;
+	favorites: Favorite[];
 	totalPage: number;
 };

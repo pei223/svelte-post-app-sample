@@ -25,6 +25,11 @@
 					url: '/posts/add',
 					icon: 'edit',
 					text: '記事を登録する'
+				},
+				{
+					url: '/favorites',
+					icon: 'favorite',
+					text: 'お気に入り記事一覧'
 				}
 		  ]
 		: [
