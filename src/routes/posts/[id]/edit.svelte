@@ -4,7 +4,7 @@
 	export const load: Load = ({ url, params }) => {
 		if (!params.id || isNaN(Number(params.id))) {
 			return {
-				status: 404
+				redirect: ErrorInfo.fromHttpStatus(url.pathname, 404).genErrorPagePath()
 			};
 		}
 		return {
@@ -26,8 +26,7 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import type { MyPost } from '$lib/domain/post';
-	import axios from 'axios';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
+	import { ErrorInfo, ERROR_CODE } from '$lib/domain/error';
 	import LoadingScreen from '$lib/components/atoms/LoadingScreen.svelte';
 	import CookieService from '$lib/services/CookieService';
 
@@ -45,25 +44,11 @@
 			const res = await findPost(appStore.accessToken, id);
 			post = res;
 		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(this.$route.path, ERROR_CODE.notAxiosError));
-				return;
+			const errInfo = ErrorInfo.fromError(location.pathname, e);
+			if (errInfo.code === ERROR_CODE.authError) {
+				new AppStoreWrapper(session, new CookieService()).clear();
 			}
-			if (!e.response) {
-				goto(genErrorPath(this.$route.path, ERROR_CODE.networkError));
-				return;
-			}
-			switch (e.response.status) {
-				case 401:
-					new AppStoreWrapper(session, new CookieService()).clear();
-					goto(`/auth/login?redirectUrl=${location.pathname}`);
-					return;
-				case 404:
-					goto('/404');
-					return;
-				default:
-					goto(genErrorPath(this.$route.path, ERROR_CODE.unexpectedApiError));
-			}
+			goto(errInfo.genErrorPagePath());
 		} finally {
 			loading = false;
 		}

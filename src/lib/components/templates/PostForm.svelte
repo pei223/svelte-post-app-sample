@@ -4,10 +4,9 @@
 	import { session } from '$app/stores';
 	import type { ErrorResponse } from '$lib/apis/ErrorResponse';
 	import { PostBody, registerPost, updatePost } from '$lib/apis/postApi';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
-	import type { MyPost, Post } from '$lib/domain/post';
+	import { ErrorInfo, ERROR_CODE } from '$lib/domain/error';
+	import type { MyPost } from '$lib/domain/post';
 	import type { AppStoreType } from '$lib/stores/AppStore';
-	import axios from 'axios';
 	import Dialog, { Title, Content, Actions } from '@smui/dialog';
 	import Button, { Label } from '@smui/button';
 
@@ -20,6 +19,7 @@
 	import Checkbox from '@smui/checkbox';
 	import FormField from '@smui/form-field';
 	import Heading from '../atoms/Heading.svelte';
+	import LoadingScreen from '../atoms/LoadingScreen.svelte';
 
 	export let edit = false;
 	export let post: MyPost = undefined;
@@ -79,32 +79,25 @@
 			}
 			goto('/posts/me');
 		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				this.$router.push(genErrorPath(this.$route.path, ERROR_CODE.notAxiosError));
+			const errorInfo = ErrorInfo.fromError(location.pathname, e);
+			if (errorInfo.code === ERROR_CODE.paramError) {
+				const errorRes = e.response.data as ErrorResponse;
+				// TODO 重複の場合エラーコードが変わるがバックエンド側がまだそこまでできてない
+				this.titleErrorMessage = errorRes.data.title ?? '';
+				this.contentErrorMessage = errorRes.data.content ?? '';
 				return;
 			}
-			if (!e.response) {
-				this.$router.push(genErrorPath(this.$route.path, ERROR_CODE.networkError));
+			if (errorInfo.code === ERROR_CODE.authError) {
+				errorDialogOpen = true;
+				errorDialogMessage = '認証に失敗しました。ログアウトして再ログインしてください。';
 				return;
 			}
-			const errorResponse = e.response.data as ErrorResponse;
-			switch (e.response.status) {
-				case 400:
-					// TODO 重複の場合エラーコードが変わるがバックエンド側がまだそこまでできてない
-					this.titleErrorMessage = errorResponse.data.title ?? '';
-					this.contentErrorMessage = errorResponse.data.content ?? '';
-					return;
-				case 401:
-					errorDialogOpen = true;
-					errorDialogMessage = '認証に失敗しました。ログアウトして再ログインしてください。';
-					return;
-				case 404:
-					errorDialogOpen = true;
-					errorDialogMessage = '対象の記事は存在しません。';
-					return;
-				default:
-					goto(genErrorPath(this.$route.path, ERROR_CODE.unexpectedApiError));
+			if (errorInfo.code === ERROR_CODE.notFound) {
+				errorDialogOpen = true;
+				errorDialogMessage = '更新対象の記事は存在しません。';
+				return;
 			}
+			goto(errorInfo.genErrorPagePath());
 		} finally {
 			loading = false;
 		}
@@ -176,6 +169,8 @@
 		</Button>
 	</Actions>
 </Dialog>
+
+<LoadingScreen open={loading} />
 
 <style>
 	.content-area {

@@ -4,7 +4,7 @@
 	export const load: Load = ({ url, params }) => {
 		if (!params.id || isNaN(Number(params.id))) {
 			return {
-				status: 404
+				redirect: ErrorInfo.fromHttpStatus(url.pathname, 404).genErrorPagePath()
 			};
 		}
 		return {
@@ -23,8 +23,7 @@
 	import { session } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import type { MyPost } from '$lib/domain/post';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
-	import axios from 'axios';
+	import { ErrorInfo } from '$lib/domain/error';
 	import LoadingScreen from '$lib/components/atoms/LoadingScreen.svelte';
 	import Heading from '$lib/components/atoms/Heading.svelte';
 	import { marked } from 'marked';
@@ -51,21 +50,8 @@
 			const res = await findPost(appStore.accessToken, id);
 			post = res;
 		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.notAxiosError));
-				return;
-			}
-			if (!e.response) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.networkError));
-				return;
-			}
-			switch (e.response.status) {
-				case 404:
-					goto('/404');
-					return;
-				default:
-					goto(genErrorPath(location.pathname, ERROR_CODE.unexpectedApiError));
-			}
+			const errInfo = ErrorInfo.fromError(location.pathname, e);
+			goto(errInfo.genErrorPagePath());
 		} finally {
 			loading = false;
 		}
@@ -77,7 +63,7 @@
 </svelte:head>
 
 <Heading title={post?.title} />
-{#if !loading}
+{#if !loading && post}
 	<h2>{post.title}</h2>
 	<div class="actions-area">
 		{#if !post.expose}

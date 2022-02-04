@@ -23,13 +23,11 @@
 	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
-	import type { ErrorResponse } from '$lib/apis/ErrorResponse';
-	import { base } from '$app/paths';
+	import { ErrorInfo, ERROR_CODE } from '$lib/domain/error';
 	import CookieService from '$lib/services/CookieService';
 	import LoadingScreen from '$lib/components/atoms/LoadingScreen.svelte';
-	import { afterUpdate, onMount } from 'svelte';
-	import Snackbar, { Actions, Label as SnackbarLabel, SnackbarComponentDev } from '@smui/snackbar';
+	import Snackbar, { Label as SnackbarLabel, SnackbarComponentDev } from '@smui/snackbar';
+	import type { ErrorResponse } from '$lib/apis/ErrorResponse';
 
 	export let redirectUrl: string | null = null;
 	let name = '';
@@ -71,28 +69,21 @@
 			});
 			goto(redirectUrl ?? '/posts/me');
 		} catch (e) {
-			console.log(e);
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(base, ERROR_CODE.notAxiosError));
+			if (!ErrorInfo.isHttpError(e)) {
+				goto(ErrorInfo.fromError(location.pathname, e).genErrorPagePath());
+			}
+			const errorRes = e.response.data as ErrorResponse;
+			if (e.response.status == 400) {
+				nameErrorMessage = errorRes.data.name ?? '';
+				passwordErrorMessage = errorRes.data.password ?? '';
 				return;
 			}
-			if (!e.response) {
-				goto(genErrorPath(base, ERROR_CODE.networkError));
+			if (e.response.status === 401) {
+				// TODO 認証エラーダイアログ
+				console.log('auth failed');
 				return;
 			}
-			const errorResponse = e.response.data as ErrorResponse;
-			switch (e.response.status) {
-				case 401:
-					// this.errorDialogOpen = true;
-					// this.errorDialogMessage = '認証エラー';
-					return;
-				case 400:
-					nameErrorMessage = errorResponse.data.name ?? '';
-					passwordErrorMessage = errorResponse.data.password ?? '';
-					return;
-				default:
-					goto(genErrorPath(base, ERROR_CODE.unexpectedApiError));
-			}
+			goto(ErrorInfo.fromError(location.pathname, e).genErrorPagePath());
 		} finally {
 			loading = false;
 		}

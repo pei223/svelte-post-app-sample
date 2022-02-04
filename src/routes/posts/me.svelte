@@ -25,9 +25,7 @@
 	import Button, { Label } from '@smui/button';
 	import Heading from '$lib/components/atoms/Heading.svelte';
 	import PagingNav from '$lib/components/blocks/PagingNav.svelte';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
-	import type { ErrorResponse } from '$lib/apis/ErrorResponse';
-	import axios from 'axios';
+	import { ErrorInfo, ERROR_CODE } from '$lib/domain/error';
 	import Loading from '$lib/components/atoms/LoadingScreen.svelte';
 	import MyPostCard from '$lib/components/blocks/MyPostCard.svelte';
 	import { browser } from '$app/env';
@@ -64,24 +62,11 @@
 			posts = res.posts;
 			maxPage = res.totalPage;
 		} catch (e) {
-			console.log(e);
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.notAxiosError));
-				return;
+			const errInfo = ErrorInfo.fromError(location.pathname, e);
+			if (errInfo.code === ERROR_CODE.authError) {
+				new AppStoreWrapper(session, new CookieService()).clear();
 			}
-			if (!e.response) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.networkError));
-				return;
-			}
-			const errorResponse = e.response.data as ErrorResponse;
-			switch (e.response.status) {
-				case 401:
-					new AppStoreWrapper(session, new CookieService()).clear();
-					goto(`/auth/login?redirectUrl=${location.pathname}`);
-					return;
-				default:
-					goto(genErrorPath(location.pathname, ERROR_CODE.unexpectedApiError));
-			}
+			goto(errInfo.genErrorPagePath());
 		} finally {
 			loading = false;
 		}
@@ -103,30 +88,17 @@
 		try {
 			loading = true;
 			await deletePost(appStore.accessToken, deleteTargetPost.id);
-			loading = false;
 			posts.splice(deleteTargetIndex, 1);
 			posts = posts;
 			deleteTargetIndex = -1;
 			deleteConfirmDialogOpen = false;
+			loading = false;
 		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(this.$route.path, ERROR_CODE.notAxiosError));
-				return;
+			const errInfo = ErrorInfo.fromError(location.pathname, e);
+			if (errInfo.code === ERROR_CODE.authError) {
+				new AppStoreWrapper(session, new CookieService()).clear();
 			}
-			if (!e.response) {
-				goto(genErrorPath(this.$route.path, ERROR_CODE.networkError));
-				return;
-			}
-			switch (e.response.status) {
-				case 401:
-					goto(`/auth/login?redirectUrl=${location.hostname}`);
-					return;
-				case 404:
-					goto('/404');
-					return;
-				default:
-					goto(genErrorPath(this.$route.path, ERROR_CODE.unexpectedApiError));
-			}
+			goto(errInfo.genErrorPagePath());
 		}
 	};
 </script>

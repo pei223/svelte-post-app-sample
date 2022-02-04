@@ -20,9 +20,7 @@
 	import { get } from 'svelte/store';
 	import { deleteFavorite, getFavorites } from '$lib/apis/favoriteApi';
 	import { goto } from '$app/navigation';
-	import axios from 'axios';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
-	import type { ErrorResponse } from '$lib/apis/ErrorResponse';
+	import { ErrorInfo, ERROR_CODE } from '$lib/domain/error';
 	import CookieService from '$lib/services/CookieService';
 	import Heading from '$lib/components/atoms/Heading.svelte';
 	import PagingNav from '$lib/components/blocks/PagingNav.svelte';
@@ -54,27 +52,12 @@
 			posts.splice(i, 1);
 			posts = posts;
 		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(this.$route.path, ERROR_CODE.notAxiosError));
-				return;
+			// TODO お気に入り削除失敗ダイアログ
+			const errInfo = ErrorInfo.fromError(location.pathname, e);
+			if (errInfo.code === ERROR_CODE.authError) {
+				new AppStoreWrapper(session, new CookieService()).clear();
 			}
-			if (!e.response) {
-				goto(genErrorPath(this.$route.path, ERROR_CODE.networkError));
-				return;
-			}
-			switch (e.response.status) {
-				case 400:
-					goto(genErrorPath(this.$route.path, ERROR_CODE.paramError));
-					break;
-				case 401:
-					goto(`/auth/login?redirectUrl=${location.pathname}`);
-					return;
-				case 404:
-					goto(`/404`);
-					return;
-				default:
-					goto(genErrorPath(this.$route.path, ERROR_CODE.unexpectedApiError));
-			}
+			goto(errInfo.genErrorPagePath());
 		}
 	};
 
@@ -89,23 +72,11 @@
 			posts = res.favorites;
 			maxPage = res.totalPage;
 		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.notAxiosError));
-				return;
+			const errInfo = ErrorInfo.fromError(location.pathname, e);
+			if (errInfo.code === ERROR_CODE.authError) {
+				new AppStoreWrapper(session, new CookieService()).clear();
 			}
-			if (!e.response) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.networkError));
-				return;
-			}
-			const errorResponse = e.response.data as ErrorResponse;
-			switch (e.response.status) {
-				case 401:
-					new AppStoreWrapper(session, new CookieService()).clear();
-					goto(`/auth/login?redirectUrl=${location.pathname}`);
-					return;
-				default:
-					goto(genErrorPath(location.pathname, ERROR_CODE.unexpectedApiError));
-			}
+			goto(errInfo.genErrorPagePath());
 		} finally {
 			loading = false;
 		}

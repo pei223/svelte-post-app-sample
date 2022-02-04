@@ -1,18 +1,24 @@
 <script context="module" lang="ts">
 	import type { Load } from '@sveltejs/kit';
-	export const load: Load = async ({ params, url, stuff, session }) => {
+	export const load: Load = async ({ url, session }) => {
 		const queries = new URLSearchParams(url.search);
 		const page =
 			queries.has('page') && !isNaN(Number(queries.get('page'))) ? Number(queries.get('page')) : 1;
-
-		const res = await getPosts(session.accessToken, page);
-		return {
-			props: {
-				posts: res.posts,
-				page,
-				maxPage: res.totalPage
-			}
-		};
+		try {
+			const res = await getPosts(session.accessToken, page);
+			return {
+				props: {
+					posts: res.posts,
+					page,
+					maxPage: res.totalPage
+				}
+			};
+		} catch (e) {
+			const errInfo = ErrorInfo.fromError(location.pathname, e);
+			return {
+				redirect: errInfo.genErrorPagePath()
+			};
+		}
 	};
 </script>
 
@@ -28,8 +34,7 @@
 	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
 	import AddFab from '$lib/components/atoms/AddFab.svelte';
 	import { addFavorite, deleteFavorite } from '$lib/apis/favoriteApi';
-	import axios from 'axios';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
+	import { ErrorInfo, ERROR_CODE } from '$lib/domain/error';
 	import CookieService from '$lib/services/CookieService';
 
 	export let posts: Post[] = [];
@@ -50,27 +55,11 @@
 			posts[i].favorited = !posts[i].favorited;
 			posts = posts;
 		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.notAxiosError));
-				return;
+			const errInfo = ErrorInfo.fromError(location.pathname, e);
+			if (errInfo.code === ERROR_CODE.authError) {
+				new AppStoreWrapper(session, new CookieService()).clear();
 			}
-			if (!e.response) {
-				goto(genErrorPath(location.pathname, ERROR_CODE.networkError));
-				return;
-			}
-			switch (e.response.status) {
-				case 400:
-					// TODO すでに登録済みの旨のダイアログ表示
-					goto(genErrorPath(location.pathname, ERROR_CODE.paramError));
-					return;
-				case 401:
-					new AppStoreWrapper(session, new CookieService()).clear();
-					goto(`/auth/login?redirectUrl=${location.pathname}`);
-					return;
-				case 404:
-					goto(genErrorPath(location.pathname, ERROR_CODE.notFound));
-					return;
-			}
+			goto(errInfo.genErrorPagePath());
 		}
 	};
 

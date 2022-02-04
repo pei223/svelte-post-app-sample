@@ -3,20 +3,21 @@
 	import Button, { Label } from '@smui/button';
 	import HelperText from '@smui/textfield/helper-text';
 	import Heading from '$lib/components/atoms/Heading.svelte';
-	import { loginRequest, signupRequest } from '$lib/apis/authApi';
+	import { signupRequest } from '$lib/apis/authApi';
 	import type { Writable } from 'svelte/store';
 	import { session } from '$app/stores';
 	import { AppStoreType, AppStoreWrapper } from '$lib/stores/AppStore';
 	import { goto } from '$app/navigation';
-	import axios from 'axios';
-	import { ERROR_CODE, genErrorPath } from '$lib/domain/error';
+	import { ErrorInfo, ERROR_CODE } from '$lib/domain/error';
 	import type { ErrorResponse } from '$lib/apis/ErrorResponse';
-	import { base } from '$app/paths';
 	import CookieService from '$lib/services/CookieService';
+	import { load } from './login.svelte';
+	import LoadingScreen from '$lib/components/atoms/LoadingScreen.svelte';
 
 	let name = '';
 	let password = '';
 	let email = '';
+	let loading = false;
 	let nameErrorMessage = '';
 	let passwordErrorMessage = '';
 	let emailErrorMessage = '';
@@ -37,6 +38,7 @@
 			emailErrorMessage = '入力してください';
 			return;
 		}
+		loading = true;
 		try {
 			const res = await signupRequest({
 				name,
@@ -51,24 +53,17 @@
 			});
 			goto('/posts/me');
 		} catch (e) {
-			if (!axios.isAxiosError(e)) {
-				goto(genErrorPath(base, ERROR_CODE.notAxiosError));
+			const errorInfo = ErrorInfo.fromError(location.pathname, e);
+			if (errorInfo.code === ERROR_CODE.paramError) {
+				const errorRes = e.response.data as ErrorResponse;
+				nameErrorMessage = errorRes.data.name ?? '';
+				emailErrorMessage = errorRes.data.email ?? '';
+				passwordErrorMessage = errorRes.data.password ?? '';
 				return;
 			}
-			if (!e.response) {
-				goto(genErrorPath(base, ERROR_CODE.networkError));
-				return;
-			}
-			const errorResponse = e.response.data as ErrorResponse;
-			switch (e.response.status) {
-				case 400:
-					nameErrorMessage = errorResponse.data.name ?? '';
-					passwordErrorMessage = errorResponse.data.password ?? '';
-					this.emailErrorMessage = errorResponse.data.email ?? '';
-					return;
-				default:
-					goto(genErrorPath(base, ERROR_CODE.unexpectedApiError));
-			}
+			goto(errorInfo.genErrorPagePath());
+		} finally {
+			loading = false;
 		}
 	};
 </script>
@@ -115,6 +110,8 @@
 <Button color="primary" on:click={signup} variant="raised">
 	<Label>登録</Label>
 </Button>
+
+<LoadingScreen open={loading} />
 
 <style>
 	.field-area {
