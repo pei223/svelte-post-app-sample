@@ -1,3 +1,17 @@
+<script context="module" lang="ts">
+	import type { Load } from '@sveltejs/kit';
+	export const load: Load = async ({ url }) => {
+		const queries = new URLSearchParams(url.search);
+		const redirectUrl = queries.has('redirectUrl') ? queries.get('redirectUrl') : null;
+
+		return {
+			props: {
+				redirectUrl
+			}
+		};
+	};
+</script>
+
 <script lang="ts">
 	import Textfield from '@smui/textfield';
 	import Button, { Label } from '@smui/button';
@@ -14,15 +28,25 @@
 	import { base } from '$app/paths';
 	import CookieService from '$lib/services/CookieService';
 	import LoadingScreen from '$lib/components/atoms/LoadingScreen.svelte';
+	import { afterUpdate, onMount } from 'svelte';
+	import Snackbar, { Actions, Label as SnackbarLabel, SnackbarComponentDev } from '@smui/snackbar';
 
+	export let redirectUrl: string | null = null;
 	let name = '';
 	let password = '';
 	let nameErrorMessage = '';
 	let passwordErrorMessage = '';
 	let loading = false;
+	let snackbarCtrl: SnackbarComponentDev;
 
 	const appStore: Writable<AppStoreType> = session;
 	const fieldStyle = 'width: 60%;';
+
+	$: {
+		if (redirectUrl != null && snackbarCtrl) {
+			snackbarCtrl.open();
+		}
+	}
 
 	const login = async () => {
 		if (name === '') {
@@ -40,15 +64,12 @@
 				password
 			});
 			const appStoreWrapper = new AppStoreWrapper(appStore, new CookieService());
-			// appStoreWrapper.setToken(res.token);
 			appStoreWrapper.set(res.token, {
 				name: res.name,
 				id: res.id,
 				email: res.email
 			});
-			const queries = new URLSearchParams(location.search);
-			const redirectUrl = queries.has('redirectUrl') ? queries.get('redirectUrl') : '/posts/me';
-			goto(redirectUrl);
+			goto(redirectUrl ?? '/posts/me');
 		} catch (e) {
 			console.log(e);
 			if (!axios.isAxiosError(e)) {
@@ -110,6 +131,10 @@
 	<Label>ログイン</Label>
 </Button>
 <LoadingScreen open={loading} />
+
+<Snackbar bind:this={snackbarCtrl}>
+	<SnackbarLabel>ログインしてください。</SnackbarLabel>
+</Snackbar>
 
 <style>
 	.field-area {

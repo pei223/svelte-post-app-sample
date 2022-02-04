@@ -24,6 +24,7 @@
     "@smui/layout-grid": "^6.0.0-beta.13",
     "@smui/list": "^6.0.0-beta.13",
     "@smui/ripple": "^6.0.0-beta.13",
+    "@smui/snackbar": "^6.0.0-beta.13",
     "@smui/textfield": "^6.0.0-beta.13",
     "@smui/top-app-bar": "^6.0.0-beta.13",
     "@sveltejs/adapter-auto": "next",
